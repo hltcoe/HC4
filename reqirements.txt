@@ -1,0 +1,4 @@
+newspaper3k
+warcio
+requests
+tqdm

@@ -40,7 +40,7 @@ def write_lock(fn, mode):
     finally:
         f.close()
         file_lock.release()
-        
+
 def read_warc_gz(cc_file):
     url = "https://commoncrawl.s3.amazonaws.com/" + cc_file
     resp = requests.get(url, stream=True)
@@ -56,14 +56,14 @@ def extract_article(record):
     html = record.content_stream().read()
     url = record.rec_headers.get_header('WARC-Target-URI')
     extracted = newspaper.Article(url)
-    
+
     extracted.download(input_html=html)
     extracted.parse()
 
     # time = None if extracted.publish_date is None else extracted.publish_date.isoformat()
     # short hand for above
     time = extracted.publish_date and extracted.publish_date.isoformat()
-    
+
     return {
         'time': time,
         'title': extracted.title,
@@ -77,9 +77,9 @@ def hash_doc(e):
 def process_cc_file(info, out_paths, validate, disable_tqdm, retry=10):
     cc_file, want_idx = info
     saved_docs = defaultdict(list)
-    
+
     for ntried in range(retry):
-        try: 
+        try:
             pbar = tqdm(disable=disable_tqdm, total=len(want_idx))
             found_idx = set()
             for rid, record in read_warc_gz(cc_file):
@@ -89,7 +89,7 @@ def process_cc_file(info, out_paths, validate, disable_tqdm, retry=10):
                         'cc_file': cc_file,
                         **extract_article(record)
                     }
-                
+
                     for lang_used in want_idx[rid]:
                         if want_idx[rid][lang_used] != hash_doc(doc):
                             if validate:
@@ -103,7 +103,7 @@ def process_cc_file(info, out_paths, validate, disable_tqdm, retry=10):
                 if len(found_idx) == len(want_idx):
                     logging.info(f"Found all needed docs in {cc_file}, early stopping")
                     break
-            
+
             if validate:
                 assert len(found_idx) == len(want_idx), f"Not finding all needed docs in {cc_files}"
 
@@ -115,9 +115,9 @@ def process_cc_file(info, out_paths, validate, disable_tqdm, retry=10):
             raise
         except Exception as e:
             logging.warning(f"Connection error {e} on {cc_file}, retrying {ntried+1} times.")
-        finally: 
+        finally:
             pbar.close()
-    
+
     for lang, docs in saved_docs.items():
         with write_lock(out_paths[lang], 'a') as fw:
             for d in docs:
@@ -145,8 +145,8 @@ def main(args):
         raise ValueError("Cannot restart and resume at the same time.")
 
     # arguments for the languages
-    lang_id_file = { 
-        lang: getattr(args, lang) 
+    lang_id_file = {
+        lang: getattr(args, lang)
         for lang in LANGUAGES if getattr(args, lang) is not None
     }
 
@@ -174,7 +174,7 @@ def main(args):
 
     if args.resume:
         logging.info(f"Resuming -- already processed {len(done_cc_files)} cc files.")
-        
+
     out_paths = {}
     for lang in lang_id_file:
         out_paths[lang] = storage / lang / 'hc4_docs.jsonl'
@@ -192,7 +192,7 @@ def main(args):
     logging.info(f'building dictionaries of document to capture')
 
     # dict(cc_file -> dict(id -> dict(langs) -> hashs'))
-    to_capture = defaultdict(lambda : defaultdict(dict)) 
+    to_capture = defaultdict(lambda : defaultdict(dict))
     for lang, id_files in lang_id_file.items():
         for id_file in tqdm(id_files, desc=f'building dict for {lang}'):
             fp = gzip.open(id_file) if id_file.endswith('.gz') else open(id_file)
@@ -211,7 +211,7 @@ def main(args):
     if args.jobs > 1:
         with Pool(args.jobs) as pool:
             list(pool.imap_unordered(
-                worker_, 
+                worker_,
                 tqdm(to_capture.items(), desc="All files")
             ))
     else:
@@ -231,12 +231,3 @@ if __name__ == '__main__':
 
     main(parser.parse_args())
 
-
-"""
-python download_documents.py \
---storage data/cc_storage  \
---fas ../multi-hc4/fas/ids.jsonl.gz \
---zho ../multi-hc4/zho/ids.jsonl.gz \
---rus ../multi-hc4/rus/ids.?.jsonl.gz \
---jobs 20 --resume
-"""
