@@ -1,4 +1,3 @@
-import sys
 import json
 import gzip
 import argparse
@@ -35,7 +34,8 @@ def validate_docs(args):
     miss_cnt = 0
     rel_miss_cnt = 0
     nonrel_miss_cnt = 0
-    for doc_info in gzip.open(args.id_file, 'rt'):
+    fp = gzip.open(args.id_file, 'rt') if args.id_file.endswith('.gz') else open(args.id_file)
+    for doc_info in fp:
         doc_id = json.loads(doc_info)['id']
         if not doc_id in doc_ids:
             miss_cnt += 1
@@ -48,7 +48,7 @@ def validate_docs(args):
             else:
                 print(f'{doc_id} missing document')
 
-    print ('MISSING DOCUMENTS:', miss_cnt)
+    print('MISSING DOCUMENTS:', miss_cnt)
     print('MISSING RELEVANT DOCUMENTS:', rel_miss_cnt)
     print('MISSING NON-RELEVANT DOCUMENTS:', nonrel_miss_cnt)
 

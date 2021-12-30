@@ -10,10 +10,9 @@ from collections import defaultdict
 from contextlib import contextmanager
 from multiprocessing import Pool, Lock
 from functools import partial
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 import requests
-from urllib3.exceptions import ProtocolError
 import newspaper
 from warcio.archiveiterator import ArchiveIterator
 
@@ -207,7 +206,7 @@ def main(args):
     if len(to_capture) == 0:
         raise ValueError("No documents need to be captured.")
 
-    worker_ = partial(process_cc_file, out_paths=out_paths, validate=args.with_validate, disable_tqdm=args.jobs > 1)
+    worker_ = partial(process_cc_file, out_paths=out_paths, validate=args.check_hash, disable_tqdm=args.jobs > 1)
     if args.jobs > 1:
         with Pool(args.jobs) as pool:
             list(pool.imap_unordered(
@@ -218,16 +217,20 @@ def main(args):
         list(map(worker_, tqdm(to_capture.items(), desc="All files")))
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--storage', required=True)
+    parser = argparse.ArgumentParser("Document download scripts for HC4 from CC.")
+    parser.add_argument('--storage', required=True, 
+                        help='Directory for storing document jsonl files.')
     for lang in LANGUAGES:
         parser.add_argument('--'+lang, nargs='+',
-                            help=f'file containing {LANG_NAME[lang]} ids')
-    parser.add_argument('--jobs', type=int, default=4)
-    parser.add_argument('--restart', action='store_true', default=False)
-    parser.add_argument('--resume', action='store_true', default=False)
+                            help=f'File containing {LANG_NAME[lang]} ids.')
+    parser.add_argument('--jobs', type=int, default=4, help='Number of processes.')
+    parser.add_argument('--restart', action='store_true', default=False, 
+                        help='Restart download from scratch.')
+    parser.add_argument('--resume', action='store_true', default=False,
+                        help="Resume download.")
 
-    parser.add_argument('--with_validate', action='store_true', default=False)
+    parser.add_argument('--check_hash', action='store_true', default=False,
+                        help="Validate document hashes during download.")
 
     main(parser.parse_args())
 
