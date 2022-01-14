@@ -5,16 +5,24 @@ Document ids, topics, and qrel files are in `resources/hc4/`
 
 Required packages for the scripts are recorded in `requirements.txt`. 
 
-## Download
+## Topics and Qrels
+
+Topics are stored in `jsonl` format and located in `resources/hc4`. The language(s) the topic is annotated for is recored in the `language_with_qrels` field. We provide the English topic title and description for all topics and human translation for the languages that it has qrels for. We also provide machine translation of them in all three languages for all topics.
+Narratives(field `narratives`) are all in English and has one entry for each of the languages that has qrels. 
+Each topic also has an English report(field `report`) that is designed to record the prior knowledge the searcher has. 
+
+Qrels are stored in the classic TREC style located in `resources/hc4/{lang}`. 
+
+## Download Documents
 
 To download the documents from Common Crawl, please use the following command to download documents.
-If you plan to use HC4 with [`ir_datasets`](https://ir-datasets.com/), please specify `~/.ir_datasets/hc4` as the storage or make a soft link to to the directory you wish to store the documents. 
+If you plan to use HC4 with [`ir_datasets`](https://ir-datasets.com/), please specify `~/.ir_datasets/hc4` as the storage or make a soft link to to the directory you wish to store the documents. The document ids and hashs are stored in `resources/hc4/{lang}/ids*.jsonl.gz`. Russian document ids are separated into 8 files. 
 
 ```bash
 python download_documents.py --storage ./data/ \
                              --zho ./resources/hc4/zho/ids.jsonl.gz \
                              --fas ./resources/hc4/fas/ids.jsonl.gz \
-                             --rus ./resources/hc4/rus/ids.jsonl.gz \
+                             --rus ./resources/hc4/rus/ids.*.jsonl.gz \
                              --jobs 4 \
                              --check_hash 
 ```
@@ -23,6 +31,7 @@ If you wish to only download the documents for one language, just specify the id
 you wish to download. 
 We encourage using the flag `--check_hash` to varify the documents downloaded match with the 
 documents we intend to use in the collection. 
+The full description of the arguments can be found when execute with the `--help` flag.
 
 ## Validate
 
