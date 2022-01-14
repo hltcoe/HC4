@@ -104,7 +104,7 @@ def process_cc_file(info, out_paths, validate, disable_tqdm, retry=10):
                     break
 
             if validate:
-                assert len(found_idx) == len(want_idx), f"Not finding all needed docs in {cc_files}"
+                assert len(found_idx) == len(want_idx), f"Not finding all needed docs in {cc_file}"
 
             break
 
