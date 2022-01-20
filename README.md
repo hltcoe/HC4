@@ -50,7 +50,7 @@ If you use this collection, please kindly cite our dataset paper with the follow
 
 ```bibtex
 @inproceedings{hc4,
-	author = {Dawn Lawrie and James Mayfield and Douglas Oard and Eugene Yang},
+	author = {Dawn Lawrie and James Mayfield and Douglas W. Oard and Eugene Yang},
 	title = {{HC4}: A New Suite of Test Collections for Ad Hoc {CLIR}},
 	booktitle = {Proceedings of the 44th European Conference on Information Retrieval (ECIR)},
 	year = {2022}
