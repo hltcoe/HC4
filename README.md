@@ -15,7 +15,7 @@ Qrels are stored in the classic TREC style located in `resources/hc4/{lang}`.
 
 ## Download Documents
 
-To download the documents from Common Crawl, please use the following command to download documents.
+To download the documents from Common Crawl, please use the following command.
 If you plan to use HC4 with [`ir_datasets`](https://ir-datasets.com/), please specify `~/.ir_datasets/hc4` as the storage or make a soft link to to the directory you wish to store the documents. The document ids and hashs are stored in `resources/hc4/{lang}/ids*.jsonl.gz`. Russian document ids are separated into 8 files. 
 
 ```bash
