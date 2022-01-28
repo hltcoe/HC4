@@ -40,8 +40,8 @@ are downloaded for each language.
 
 ```bash
 python validate_hc4_documents.py --hc4_file ./data/zho/hc4_docs.jsonl \
-                                 --id_file ./resources/zho/ids.jsonl.gz \
-                                 --qrels ./resources/zho/*.qrels.txt
+                                 --id_file ./resources/hc4/zho/ids.jsonl.gz \
+                                 --qrels ./resources/hc4/zho/*.qrels.v1-0.txt
 ```
 
 ## Reference

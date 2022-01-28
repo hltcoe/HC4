@@ -7,7 +7,7 @@ from tqdm.auto import tqdm
 def get_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('--hc4_file', help='file containing the documents for a particular lang', required=True)
-    parser.add_argument('--id_file', help='file containing ids for the language', required=True)
+    parser.add_argument('--id_file', help='file containing ids for the language', nargs='+', required=True)
     parser.add_argument('--qrels', help='file containing qrels for the language', metavar='qRel', nargs='+', required=True)
     return parser.parse_args()
 
@@ -34,19 +34,20 @@ def validate_docs(args):
     miss_cnt = 0
     rel_miss_cnt = 0
     nonrel_miss_cnt = 0
-    fp = gzip.open(args.id_file, 'rt') if args.id_file.endswith('.gz') else open(args.id_file)
-    for doc_info in fp:
-        doc_id = json.loads(doc_info)['id']
-        if not doc_id in doc_ids:
-            miss_cnt += 1
-            if doc_id in rel_docs:
-                print(f'{doc_id} MISSING RELEVANT DOCUMENT')
-                rel_miss_cnt += 1
-            elif doc_id in nonrel_docs:
-                print(f'{doc_id} missing non-relevant document')
-                nonrel_miss_cnt += 1
-            else:
-                print(f'{doc_id} missing document')
+    for id_file in args.id_file:
+        fp = gzip.open(id_file, 'rt') if id_file.endswith('.gz') else open(id_file)
+        for doc_info in fp:
+            doc_id = json.loads(doc_info)['id']
+            if not doc_id in doc_ids:
+                miss_cnt += 1
+                if doc_id in rel_docs:
+                    print(f'{doc_id} MISSING RELEVANT DOCUMENT')
+                    rel_miss_cnt += 1
+                elif doc_id in nonrel_docs:
+                    print(f'{doc_id} missing non-relevant document')
+                    nonrel_miss_cnt += 1
+                else:
+                    print(f'{doc_id} missing document')
 
     print('MISSING DOCUMENTS:', miss_cnt)
     print('MISSING RELEVANT DOCUMENTS:', rel_miss_cnt)

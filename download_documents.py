@@ -54,7 +54,7 @@ def read_warc_gz(cc_file):
 def extract_article(record):
     html = record.content_stream().read()
     url = record.rec_headers.get_header('WARC-Target-URI')
-    extracted = newspaper.Article(url)
+    extracted = newspaper.Article("", fetch_images=False)
 
     extracted.download(input_html=html)
     extracted.parse()
@@ -218,13 +218,13 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser("Document download scripts for HC4 from CC.")
-    parser.add_argument('--storage', required=True, 
+    parser.add_argument('--storage', required=True,
                         help='Directory for storing document jsonl files.')
     for lang in LANGUAGES:
         parser.add_argument('--'+lang, nargs='+',
                             help=f'File containing {LANG_NAME[lang]} ids.')
     parser.add_argument('--jobs', type=int, default=4, help='Number of processes.')
-    parser.add_argument('--restart', action='store_true', default=False, 
+    parser.add_argument('--restart', action='store_true', default=False,
                         help='Restart download from scratch.')
     parser.add_argument('--resume', action='store_true', default=False,
                         help="Resume download.")
