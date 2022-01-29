@@ -38,7 +38,7 @@ The full description of the arguments can be found when execute with the `--help
 Multiprocessing during download results in arbitrary ordering of the documents in the saved `.jsonl` files. 
 To support full reproducibility, we provide script to postprocess the file to match the document order specified in the document id files. 
 `fix_document_order.py` changes the ordering of the documents, validates the document hashs, and verifies all and only specified documents are in 
-the result file. Following is a sample command. 
+the result file. The unsorted file will be renamed as `hc4_docs.jsonl.bak`. You could delete the file manually. Following is a sample command. 
 
 ```bash
 python fix_document_order.py --hc4_file ./data/rus/hc4_docs.jsonl \
