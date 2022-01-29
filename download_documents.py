@@ -4,7 +4,7 @@ import logging
 import json
 import gzip
 from pathlib import Path
-from hashlib import md5
+
 
 from collections import defaultdict
 from contextlib import contextmanager
@@ -16,6 +16,7 @@ import requests
 import newspaper
 from warcio.archiveiterator import ArchiveIterator
 
+from fix_document_order import hash_doc
 
 # Original written as part of https://github.com/complementizer/wcep-mds-dataset
 # File was called `extract_wcep_articles.py`
@@ -37,6 +38,7 @@ def write_lock(fn, mode):
     try:
         yield f
     finally:
+        f.flush()
         f.close()
         file_lock.release()
 
@@ -70,13 +72,12 @@ def extract_article(record):
         'url': url,
     }
 
-def hash_doc(e):
-    return md5( (e['title'].strip() + e['text'].strip()).encode('utf-8') ).hexdigest()
 
 def process_cc_file(info, out_paths, validate, disable_tqdm, retry=10):
     cc_file, want_idx = info
     saved_docs = defaultdict(list)
 
+    success = False
     for ntried in range(retry):
         try:
             pbar = tqdm(disable=disable_tqdm, total=len(want_idx))
@@ -106,6 +107,7 @@ def process_cc_file(info, out_paths, validate, disable_tqdm, retry=10):
             if validate:
                 assert len(found_idx) == len(want_idx), f"Not finding all needed docs in {cc_file}"
 
+            success = True
             break
 
         except AssertionError:
@@ -117,17 +119,19 @@ def process_cc_file(info, out_paths, validate, disable_tqdm, retry=10):
         finally:
             pbar.close()
 
-    for lang, docs in saved_docs.items():
-        with write_lock(out_paths[lang], 'a') as fw:
-            for d in docs:
-                fw.write(json.dumps(d, ensure_ascii=False) + '\n')
+    if success:
+        for lang, docs in saved_docs.items():
+            with write_lock(out_paths[lang], 'a') as fw:
+                for d in docs:
+                    fw.write(json.dumps(d, ensure_ascii=False) + '\n')
 
-    logging.info(f'done-cc-file:{cc_file}')
+        logging.info(f'done-cc-file:{cc_file}')
 
-def read_log(path):
+
+def read_doc_file(path):
     return set(
-        line.split('done-cc-file:')[1].split('--')[0].strip()
-        for line in open(path) if 'done-cc-file' in line
+        json.loads(doc)['id']
+        for doc in tqdm(open(path), desc=f'Reading downloaded document file from {path}')
     )
 
 def mute_other_loggers():
@@ -153,14 +157,8 @@ def main(args):
     storage.mkdir(exist_ok=True, parents=True)
 
     logpath = storage / 'hc4_log.txt'
-    done_cc_files = set()
-    if logpath.exists():
-        if args.restart:
-            logpath.unlink()
-        elif args.resume:
-            done_cc_files = read_log(logpath)
-        else:
-            raise FileExistsError(f"Log file at {logpath} already exists.")
+    if logpath.exists() and args.restart:
+        logpath.unlink()
 
     logging.basicConfig(
         level=logging.DEBUG,
@@ -170,9 +168,6 @@ def main(args):
     )
     logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
     mute_other_loggers()
-
-    if args.resume:
-        logging.info(f"Resuming -- already processed {len(done_cc_files)} cc files.")
 
     out_paths = {}
     for lang in lang_id_file:
@@ -188,16 +183,23 @@ def main(args):
     if len(out_paths) == 0:
         raise ValueError("No languages to process.")
 
+    downloaded_doc_ids = {}
+    for lang in lang_id_file.keys():
+        if out_paths[lang].exists():
+            downloaded_doc_ids[lang] = read_doc_file(out_paths[lang])
+            logging.info(f"Resuming -- already downloaded {len(downloaded_doc_ids[lang])} {lang} docs.")
+
+
     logging.info(f'building dictionaries of document to capture')
 
-    # dict(cc_file -> dict(id -> dict(langs) -> hashs'))
+    # Dict[cc_file, Dict[id, Dict[langs, hashs] ] ]
     to_capture = defaultdict(lambda : defaultdict(dict))
     for lang, id_files in lang_id_file.items():
         for id_file in tqdm(id_files, desc=f'building dict for {lang}'):
             fp = gzip.open(id_file) if id_file.endswith('.gz') else open(id_file)
             for line in tqdm(fp, desc=f'{lang} -- {id_file}', leave=False):
                 line = json.loads(line)
-                if line['cc_file'] not in done_cc_files:
+                if line['id'] not in downloaded_doc_ids[lang]:
                     to_capture[ line['cc_file'] ][ line['id'] ][ lang ] = line['md5']
 
     logging.info(f'Looking for {sum(len(idx) for idx in to_capture.values())} '
@@ -206,7 +208,8 @@ def main(args):
     if len(to_capture) == 0:
         raise ValueError("No documents need to be captured.")
 
-    worker_ = partial(process_cc_file, out_paths=out_paths, validate=args.check_hash, disable_tqdm=args.jobs > 1)
+    worker_ = partial(process_cc_file, out_paths=out_paths, validate=args.check_hash, 
+                      disable_tqdm=args.jobs>1, retry=args.retry)
     if args.jobs > 1:
         with Pool(args.jobs) as pool:
             list(pool.imap_unordered(
@@ -226,6 +229,8 @@ if __name__ == '__main__':
     parser.add_argument('--jobs', type=int, default=4, help='Number of processes.')
     parser.add_argument('--restart', action='store_true', default=False,
                         help='Restart download from scratch.')
+    parser.add_argument('--retry', type=int, default=20, 
+                        help='Number of retries per CC file when downloading.')
     parser.add_argument('--resume', action='store_true', default=False,
                         help="Resume download.")
 

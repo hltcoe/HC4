@@ -33,15 +33,17 @@ We encourage using the flag `--check_hash` to varify the documents downloaded ma
 documents we intend to use in the collection. 
 The full description of the arguments can be found when execute with the `--help` flag.
 
-## Validate
+## Postprocessing of the Downloaded Documents
 
-After documents are downloaded, please run the `validate_hc4_documents.py` to verify all documents 
-are downloaded for each language. 
+Multiprocessing during download results in arbitrary ordering of the documents in the saved `.jsonl` files. 
+To support full reproducibility, we provide script to postprocess the file to match the document order specified in the document id files. 
+`fix_document_order.py` changes the ordering of the documents, validates the document hashs, and verifies all and only specified documents are in 
+the result file. Following is a sample command. 
 
 ```bash
-python validate_hc4_documents.py --hc4_file ./data/zho/hc4_docs.jsonl \
-                                 --id_file ./resources/hc4/zho/ids.jsonl.gz \
-                                 --qrels ./resources/hc4/zho/*.qrels.v1-0.txt
+python fix_document_order.py --hc4_file ./data/rus/hc4_docs.jsonl \
+                             --id_file ./resources/hc4/rus/ids*.jsonl.gz \
+                             --check_hash
 ```
 
 ## Reference
