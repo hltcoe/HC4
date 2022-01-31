@@ -183,7 +183,7 @@ def main(args):
     if len(out_paths) == 0:
         raise ValueError("No languages to process.")
 
-    downloaded_doc_ids = {}
+    downloaded_doc_ids = defaultdict(dict)
     for lang in lang_id_file.keys():
         if out_paths[lang].exists():
             downloaded_doc_ids[lang] = read_doc_file(out_paths[lang])
