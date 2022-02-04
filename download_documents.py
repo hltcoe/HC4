@@ -111,7 +111,7 @@ def process_cc_file(info, out_paths, validate, disable_tqdm, retry=10):
             break
 
         except AssertionError:
-            logging.warning(f"Assertion erroer, retrying {ntried+1} times.")
+            logging.warning(f"Assertion error, retrying {ntried+1} times.")
         except KeyboardInterrupt:
             raise
         except Exception as e:
