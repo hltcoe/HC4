@@ -5,6 +5,9 @@ Document ids, topics, and qrel files are in `resources/hc4/`
 
 Required packages for the scripts are recorded in `requirements.txt`. 
 
+We recommand creating a new python environment for downloading. Package versions could have some unintentional effect on decoding 
+the documents from Common Crawl. Please contact us if you have documents with mismatch hashs. 
+
 ## Topics and Qrels
 
 Topics are stored in `jsonl` format and located in `resources/hc4`. The language(s) the topic is annotated for is recored in the `language_with_qrels` field. We provide the English topic title and description for all topics and human translation for the languages that it has qrels for. We also provide machine translation of them in all three languages for all topics.
@@ -23,14 +26,11 @@ python download_documents.py --storage ./data/ \
                              --zho ./resources/hc4/zho/ids.jsonl.gz \
                              --fas ./resources/hc4/fas/ids.jsonl.gz \
                              --rus ./resources/hc4/rus/ids.*.jsonl.gz \
-                             --jobs 4 \
-                             --check_hash 
+                             --jobs 4
 ```
 
 If you wish to only download the documents for one language, just specify the id file for the language
 you wish to download. 
-We encourage using the flag `--check_hash` to varify the documents downloaded match with the 
-documents we intend to use in the collection. 
 The full description of the arguments can be found when execute with the `--help` flag.
 
 ## Postprocessing of the Downloaded Documents
