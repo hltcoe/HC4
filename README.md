@@ -31,6 +31,8 @@ python download_documents.py --storage ./data/ \
 
 If you wish to only download the documents for one language, just specify the id file for the language
 you wish to download. 
+In case the URLs for the Common Crawl files change in the future, the flag `--cc_base_url` provides the options 
+to specify an alternative URL for the files. The current default value points to `https://data.commoncrawl.org/`. 
 The full description of the arguments can be found when execute with the `--help` flag.
 
 ## Postprocessing of the Downloaded Documents
@@ -45,6 +47,10 @@ python fix_document_order.py --hc4_file ./data/rus/hc4_docs.jsonl \
                              --id_file ./resources/hc4/rus/ids*.jsonl.gz \
                              --check_hash
 ```
+
+**If the script identifies missing files during postprocessing, please rerun the downloading script with `--resume` flag to get the missing documents.**
+**Some files might be missing due to temporary network failure or connection refused by the Common Crawl servers.**
+**Rerunning the downloading script usually would be able to retrieve those documents. If not, please raise issue with the document id to bring this to our attention.**
 
 ## Reference
 

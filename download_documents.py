@@ -42,8 +42,8 @@ def write_lock(fn, mode):
         f.close()
         file_lock.release()
 
-def read_warc_gz(cc_file):
-    url = "https://commoncrawl.s3.amazonaws.com/" + cc_file
+def read_warc_gz(cc_file, cc_base_url="https://data.commoncrawl.org/"):
+    url = cc_base_url + cc_file
     resp = requests.get(url, stream=True)
     for record in ArchiveIterator(resp.raw, arc2warc=True):
         # if (record.rec_type == 'response' and \
@@ -73,7 +73,8 @@ def extract_article(record):
     }
 
 
-def process_cc_file(info, out_paths, validate, disable_tqdm, retry=10):
+def process_cc_file(info, out_paths, validate, disable_tqdm, retry=10,
+                    cc_base_url="https://data.commoncrawl.org/"):
     cc_file, want_idx = info
     saved_docs = defaultdict(list)
 
@@ -82,7 +83,7 @@ def process_cc_file(info, out_paths, validate, disable_tqdm, retry=10):
         try:
             pbar = tqdm(disable=disable_tqdm, total=len(want_idx))
             found_idx = set()
-            for rid, record in read_warc_gz(cc_file):
+            for rid, record in read_warc_gz(cc_file, cc_base_url=cc_base_url):
                 if rid in want_idx:
                     doc = {
                         'id': rid,
@@ -209,7 +210,8 @@ def main(args):
         raise ValueError("No documents need to be captured.")
 
     worker_ = partial(process_cc_file, out_paths=out_paths, validate=args.check_hash, 
-                      disable_tqdm=args.jobs>1, retry=args.retry)
+                      disable_tqdm=args.jobs>1, retry=args.retry,
+                      cc_base_url=args.cc_base_url)
     if args.jobs > 1:
         with Pool(args.jobs) as pool:
             list(pool.imap_unordered(
@@ -236,6 +238,9 @@ if __name__ == '__main__':
 
     parser.add_argument('--check_hash', action='store_true', default=False,
                         help="Validate document hashes during download.")
+
+    parser.add_argument('--cc_base_url', type=str, default="https://data.commoncrawl.org/",
+                        help="The base URL for CC WARC files.")
 
     main(parser.parse_args())
 
