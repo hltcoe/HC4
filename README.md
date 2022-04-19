@@ -6,7 +6,9 @@ Document ids, topics, and qrel files are in `resources/hc4/`
 Required packages for the scripts are recorded in `requirements.txt`. 
 
 We recommand creating a new python environment for downloading. Package versions could have some unintentional effect on decoding 
-the documents from Common Crawl. Please contact us if you have documents with mismatch hashs. 
+the documents from Common Crawl. Documents could have changed on the Common Crawl file for numerous reasons, including take down requests.
+When a document changes, we record them in a [change log document](./changed_docs.md). 
+Please raise and issue if you have documents with mismatch hashs that are not yet recorded. 
 
 ## Topics and Qrels
 
