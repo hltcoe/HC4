@@ -7,9 +7,6 @@ The date does not represent the actual date when the document changes but when w
 If the document you have fetched does not match either the original hash in the `id.jsonl.gz` file nor the new hash recorded here, 
 please raise an issue to bring this to our attention. 
 
-If you are interested in using the original documents, please contact us to request the original version. 
-We may request signing a written consensus or agreement for proper usage if required by Common Crawl or other parties. 
-
 ## Persian Collection 
 
 | Document ID                          | Original Hash                    | New Hash                         | Judgement   | Date         |
