@@ -1,0 +1,93 @@
+database:
+  name: sqlite
+  output: database
+documents:
+  input:
+    encoding: utf8
+    format: json
+    lang: eng
+    path: $PATH1/ru_cc_articles.20210710-scale21-sockeye2-tm1.jsonl
+  output: false
+  process:
+    normalize:
+      lowercase: true
+      report: false
+    stem: spacy
+    stopwords: lucene
+    strict_check: true
+    tokenize: spacy
+index:
+  name: lucene
+  output: index
+queries:
+  output: processed_queries
+  parse: false
+  process:
+    normalize:
+      lowercase: true
+      report: false
+    stem: spacy
+    stopwords: lucene
+    strict_check: true
+    tokenize: spacy
+retrieve:
+  b: 0.4
+  fb_docs: 10
+  fb_terms: 10
+  input:
+    index:
+      path: $PATH2/index
+  k1: 0.9
+  log_explanations: false
+  log_explanations_cutoff: 10
+  mu: 1000
+  name: bm25
+  number: 1000
+  original_query_weight: 0.5
+  output: retrieve
+  parse: false
+  psq: false
+  rm3: true
+  rm3_logging: false
+run:
+  name: Russian HC4 base doc translation spacy HC4 title+description bm25 w/rm3 default
+    parameters
+  parallel:
+    name: qsub
+    queue: $QNAME
+    resources: h_rt=12:00:00
+  path: $PATH2
+  results: results.txt
+  stage1:
+    mode: streaming
+    num_jobs: 40
+    progress_interval: 10000
+  stage2:
+    mode: streaming
+    num_jobs: 1
+    progress_interval: 10
+topics:
+  fields: title+description
+  input:
+    encoding: utf8
+    format: jsonl
+    lang: eng
+    path:
+    - $PATH3/eng/dev.topics.v1-0.jsonl
+    - $PATH3/eng/test.topics.v1-0.jsonl
+    prefix: false
+    source: original
+    strip_non_digits: false
+  output: false
+score:
+  input:
+    format: trec
+    path:
+    - $PATH3/rus/dev.qrels.v1-0.txt
+    - $PATH3/rus/test.qrels.v1-0.txt
+  metrics:
+  - ndcg_prime
+  - ndcg
+  - map
+  - recall_100
+  - recall_1000

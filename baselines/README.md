@@ -1,0 +1,2 @@
+# HC4 Runs
+The runs in this directory use document translation to cross the language barrrier. Document translation was performed using SOCKEYE trained in house. The queries are title+decription. Patapsco was used to perform the retrieval. Configuation files, result files, and score files are included for each of the three languages. 
